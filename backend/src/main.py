@@ -25,6 +25,7 @@ from typing import Dict, List, Optional, Any
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .aiops_metrics import (
@@ -60,6 +61,10 @@ anomaly_predictor = runtime_bundle.anomaly_predictor
 
 for enterprise_router in runtime_bundle.routers:
     app.include_router(enterprise_router)
+
+_images_dir = Path(__file__).resolve().parents[2] / "frontend" / "public" / "images"
+if _images_dir.is_dir():
+    app.mount("/images", StaticFiles(directory=str(_images_dir)), name="portal_images")
 
 
 class ChatMessage(BaseModel):
