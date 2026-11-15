@@ -80,6 +80,7 @@ export default function SecurityView({ darkMode = true }) {
     buildDecontaminatedTokens(SAMPLE_PAYLOADS["Healthcare HIPAA"], "Healthcare HIPAA")
   );
   const [riskScore, setRiskScore] = useState(0.12);
+  const [liveGatewayReceipt, setLiveGatewayReceipt] = useState(null);
 
   const handlePolicyChange = (e) => {
     const nextPolicy = e.target.value;
@@ -88,16 +89,44 @@ export default function SecurityView({ darkMode = true }) {
     setRawInput(sample);
     setInspectedState(buildDecontaminatedTokens(sample, nextPolicy));
     setRiskScore(0.12);
+    setLiveGatewayReceipt(null);
   };
 
   const handleInspectAndRoute = () => {
     setIsScanning(true);
-    setTimeout(() => {
-      const result = buildDecontaminatedTokens(rawInput, policy);
-      setInspectedState(result);
-      setRiskScore(result.redactionCount > 0 ? 0.12 : 0.04);
-      setIsScanning(false);
-    }, 280);
+    const result = buildDecontaminatedTokens(rawInput, policy);
+    setInspectedState(result);
+
+    const apiBase =
+      (typeof window !== "undefined" && window.__AI_PORTAL_API_BASE__) ||
+      (typeof window !== "undefined" && window.location.port === "3000"
+        ? `${window.location.protocol}//${window.location.hostname}:8000`
+        : "");
+
+    fetch(`${apiBase}/v1/chat/completions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "enterprise-primary-llm",
+        tenant_id: policy.toLowerCase().replace(/\s+/g, "-"),
+        messages: [{ role: "user", content: rawInput }],
+      }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.governance_envelope) {
+          setLiveGatewayReceipt(data.governance_envelope);
+          const approved = data.governance_envelope.compliance_verdict?.approved;
+          setRiskScore(approved === false ? 0.88 : result.redactionCount > 0 ? 0.12 : 0.04);
+        } else {
+          setRiskScore(result.redactionCount > 0 ? 0.12 : 0.04);
+        }
+        setIsScanning(false);
+      })
+      .catch(() => {
+        setRiskScore(result.redactionCount > 0 ? 0.12 : 0.04);
+        setIsScanning(false);
+      });
   };
 
   const cardSurface = darkMode
@@ -235,6 +264,30 @@ export default function SecurityView({ darkMode = true }) {
           </div>
         </div>
       </section>
+
+      {liveGatewayReceipt && (
+        <section className={`p-4 rounded-xl border text-xs font-mono space-y-2 ${cardSurface}`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-bold text-emerald-400">
+              ● Live Gateway Pipeline Receipt ({liveGatewayReceipt.edition})
+            </span>
+            <span>
+              Judge:{" "}
+              <strong
+                className={
+                  liveGatewayReceipt.compliance_verdict?.approved ? "text-emerald-400" : "text-red-400"
+                }
+              >
+                {liveGatewayReceipt.compliance_verdict?.approved ? "APPROVED" : "QUARANTINED"}
+              </strong>{" "}
+              &bull; Anchored Block #{liveGatewayReceipt.audit_ledger_block?.sequence_id}
+            </span>
+          </div>
+          <p className="break-words text-slate-300">
+            Vaulted Payload: {liveGatewayReceipt.privacy_scrubber?.sanitized_text}
+          </p>
+        </section>
+      )}
     </div>
   );
 }

@@ -220,6 +220,7 @@ async def serve_executive_portal_spa() -> HTMLResponse:
     """
     frontend_src = Path(__file__).resolve().parents[2] / "frontend" / "src"
     jsx_files = [
+        frontend_src / "components" / "WorkflowView.jsx",
         frontend_src / "components" / "DashboardView.jsx",
         frontend_src / "components" / "SecurityView.jsx",
         frontend_src / "components" / "ComplianceView.jsx",

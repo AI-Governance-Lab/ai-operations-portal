@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from "react";
+import WorkflowView from "./components/WorkflowView";
 import DashboardView from "./components/DashboardView";
 import SecurityView from "./components/SecurityView";
 import ComplianceView from "./components/ComplianceView";
 import StressTestingView from "./components/StressTestingView";
 
 const NAV_ITEMS = [
+  {
+    id: "workflow",
+    icon: "🧭",
+    label: "Overview: Scope & Workflow",
+    sublabel: "4-Stage Pipeline",
+  },
   {
     id: "dashboard",
     icon: "📊",
@@ -33,6 +40,7 @@ const NAV_ITEMS = [
 
 // Poze specifice pentru frame-ul din STANGA (Sidebar)
 const LEFT_IMAGES = {
+  workflow: "/images/left-dashboard.jpg",
   dashboard: "/images/left-dashboard.jpg",
   security: "/images/left-security.jpg",
   compliance: "/images/left-compliance.jpg",
@@ -41,6 +49,7 @@ const LEFT_IMAGES = {
 
 // Poze diferite pentru frame-ul din DREAPTA (Main Content Background)
 const RIGHT_IMAGES = {
+  workflow: "/images/right-dashboard.jpg",
   dashboard: "/images/right-dashboard.jpg",
   security: "/images/right-security.jpg",
   compliance: "/images/right-compliance.jpg",
@@ -48,7 +57,7 @@ const RIGHT_IMAGES = {
 };
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("workflow");
   const [darkMode, setDarkMode] = useState(true);
   const [editionInfo, setEditionInfo] = useState({
     edition: "open-core",
@@ -255,6 +264,13 @@ export default function App() {
           </div>
 
           <div className="max-w-6xl mx-auto relative z-10">
+            {activeTab === "workflow" && (
+              <WorkflowView
+                darkMode={darkMode}
+                editionInfo={editionInfo}
+                onNavigate={setActiveTab}
+              />
+            )}
             {activeTab === "dashboard" && <DashboardView darkMode={darkMode} />}
             {activeTab === "security" && <SecurityView darkMode={darkMode} />}
             {activeTab === "compliance" && <ComplianceView darkMode={darkMode} />}
