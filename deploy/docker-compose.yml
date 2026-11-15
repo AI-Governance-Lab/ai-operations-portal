@@ -1,0 +1,110 @@
+version: "3.9"
+
+# ============================================================================
+# AI Operations Portal - Turnkey Cloud-Agnostic Local Stack
+# Orchestrates: backend (:8000), frontend (:3000), prometheus (:9090), grafana (:3001)
+# ============================================================================
+
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: ai-operations-portal-backend
+    env_file:
+      - ../.env
+    environment:
+      - SOVEREIGN_GATEWAY_AUTH_TOKEN=${SOVEREIGN_GATEWAY_AUTH_TOKEN:-sk-sovereign-local-airgap-token-01}
+      - PORTAL_MASTER_KEY=${PORTAL_MASTER_KEY:-sk-sovereign-gateway-local-master}
+      - LITELLM_CONFIG_PATH=/app/config.yaml
+      - LITELLM_PROXY_MODE=${LITELLM_PROXY_MODE:-local-mock-fallback}
+    ports:
+      - "8000:8000"
+    networks:
+      - ai_portal_perimeter
+    restart: unless-stopped
+
+  frontend:
+    image: node:20-alpine
+    container_name: ai-operations-portal-frontend
+    working_dir: /app/frontend
+    volumes:
+      - ../frontend:/app/frontend
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    command: >
+      sh -c "npm install --no-audit --no-fund &&
+             npm run dev -- --host 0.0.0.0 --port 3000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - ai_portal_perimeter
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: ai-operations-portal-prometheus
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        cat << 'EOF' > /tmp/prometheus.yml
+        global:
+          scrape_interval: 5s
+          evaluation_interval: 5s
+        scrape_configs:
+          - job_name: 'ai-operations-portal-backend'
+            metrics_path: '/metrics'
+            static_configs:
+              - targets: ['backend:8000']
+        EOF
+        exec /bin/prometheus --config.file=/tmp/prometheus.yml --storage.tsdb.path=/prometheus --web.enable-lifecycle
+    ports:
+      - "9090:9090"
+    depends_on:
+      - backend
+    networks:
+      - ai_portal_perimeter
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana-oss:11.0.0
+    container_name: ai-operations-portal-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-sovereign-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_PATHS_PROVISIONING=/tmp/provisioning
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mkdir -p /tmp/provisioning/datasources /tmp/provisioning/dashboards
+        cat << 'EOF' > /tmp/provisioning/datasources/prometheus.yaml
+        apiVersion: 1
+        datasources:
+          - name: Prometheus
+            type: prometheus
+            access: proxy
+            url: http://prometheus:9090
+            isDefault: true
+            editable: false
+        EOF
+        exec /run.sh
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - ai_portal_perimeter
+    restart: unless-stopped
+
+networks:
+  ai_portal_perimeter:
+    driver: bridge
+    internal: false
+

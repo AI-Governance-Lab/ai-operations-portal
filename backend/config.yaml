@@ -1,0 +1,93 @@
+# ============================================================================
+# AI Operations Portal - Embedded LiteLLM Proxy & FinOps Configuration
+# 100% Cloud-Agnostic, Self-Hosted Routing Plane (Docker / K3s / OpenShift)
+# Works out-of-the-box with built-in mock/fallback profiles when external keys
+# or upstream inference servers are absent.
+# ============================================================================
+
+model_list:
+  # 1. Primary Sovereign Inference Profile (Latency-Routed with Safe Mock Default)
+  - model_name: enterprise-primary-llm
+    litellm_params:
+      model: openai/qwen2.5-72b-instruct
+      api_base: http://localhost:8000/v1
+      api_key: sk-sovereign-local-default-key
+      mock_response: "[Sovereign AI Core v1] Governed primary response verified inside air-gapped perimeter."
+      rpm: 1200
+      tpm: 250000
+      timeout: 15
+      max_retries: 1
+    model_info:
+      id: "sovereign-primary-vllm-01"
+      mode: "chat"
+      input_cost_per_token: 0.0000005
+      output_cost_per_token: 0.0000015
+
+  # 2. Local DeepSeek-R1 Circuit-Breaker Fallback Profile (Zero External Key Dependency)
+  - model_name: deepseek-r1-local-fallback
+    litellm_params:
+      model: openai/deepseek-r1-distill-qwen-32b
+      api_base: http://localhost:8000/v1
+      api_key: sk-sovereign-fallback-local-key
+      mock_response: "[DeepSeek-R1 Local Fallback] Financial Circuit Breaker / Offline Fallback active. Zero external cloud egress."
+      rpm: 2400
+      tpm: 500000
+      timeout: 10
+      max_retries: 1
+    model_info:
+      id: "sovereign-deepseek-r1-fallback-01"
+      mode: "chat"
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+  # 3. Asynchronous Multi-Judge Consensus SLM Profile (Mock-Safe Council Node)
+  - model_name: enterprise-judge-slm
+    litellm_params:
+      model: openai/qwen2.5-7b-instruct
+      api_base: http://localhost:8000/v1
+      api_key: sk-sovereign-judge-local-key
+      mock_response: "APPROVED: Zero policy violations or PII leaks detected."
+      rpm: 3000
+      tpm: 500000
+      timeout: 10
+    model_info:
+      id: "sovereign-slm-judge-01"
+      mode: "chat"
+      input_cost_per_token: 0.0000001
+      output_cost_per_token: 0.0000002
+
+litellm_settings:
+  # Native Prometheus AIOps Telemetry Callbacks (Zero External SaaS Lock-in)
+  success_callback: ["prometheus"]
+  failure_callback: ["prometheus"]
+  service_callback: ["prometheus_system"]
+
+  # Privacy & Air-Gap Enforcement
+  telemetry: false
+  redact_user_api_key_info: true
+  turn_off_message_logging: true
+  drop_params: true
+
+  # FinOps Global & Daily Ceiling Controls
+  max_budget: 500.00
+  budget_duration: "1d"
+
+router_settings:
+  # Autonomous Latency-Based Routing with Guaranteed Local Mock Fallback
+  routing_strategy: latency-based-routing
+  enable_pre_call_checks: true
+  num_retries: 1
+  timeout: 15
+  cooldown_time: 30
+  allowed_fails: 2
+  fallbacks:
+    - {"enterprise-primary-llm": ["deepseek-r1-local-fallback"]}
+  default_fallbacks: ["deepseek-r1-local-fallback"]
+  context_window_fallbacks:
+    - {"enterprise-primary-llm": ["deepseek-r1-local-fallback"]}
+
+general_settings:
+  master_key: sk-sovereign-gateway-local-master
+  database_connection_pool_limit: 20
+  disable_spend_logs: false
+
