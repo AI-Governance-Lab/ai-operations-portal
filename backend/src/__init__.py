@@ -11,5 +11,6 @@ __all__ = [
     "privacy_scrubber",
     "compliance_judges",
     "audit_ledger",
+    "plugin_loader",
     "main",
 ]

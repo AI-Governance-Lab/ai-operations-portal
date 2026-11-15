@@ -50,13 +50,33 @@ const RIGHT_IMAGES = {
 export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [darkMode, setDarkMode] = useState(true);
+  const [editionInfo, setEditionInfo] = useState({
+    edition: "open-core",
+    plugin_source: "open-core-builtin",
+  });
 
-  // Preload all local images for instant, zero-lag switching
+  // Preload all local images and probe active Open-Core vs Enterprise edition
   useEffect(() => {
     Object.values(LEFT_IMAGES).concat(Object.values(RIGHT_IMAGES)).forEach((src) => {
       const img = new Image();
       img.src = src;
     });
+
+    const apiBase =
+      (typeof window !== "undefined" && window.__AI_PORTAL_API_BASE__) ||
+      (typeof window !== "undefined" && window.location.port === "3000"
+        ? `${window.location.protocol}//${window.location.hostname}:8000`
+        : "");
+    fetch(`${apiBase}/api/v1/edition`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.edition) {
+          setEditionInfo(data);
+        }
+      })
+      .catch(() => {
+        // Standalone UI demo mode fallback
+      });
   }, []);
 
   const rootTheme = darkMode
@@ -125,7 +145,12 @@ export default function App() {
             Proxy Port: <strong className="text-emerald-400">:4001</strong>
           </span>
           <span className={`px-2.5 py-1 rounded border ${badgeTheme}`}>
-            Active Enforcement Plane: <strong className="text-indigo-400">Sovereign AI Core v1</strong>
+            Active Enforcement Plane:{" "}
+            <strong className={editionInfo.edition === "enterprise" ? "text-amber-400" : "text-indigo-400"}>
+              {editionInfo.edition === "enterprise"
+                ? "Enterprise Plugins ● Active"
+                : "Open-Core Demo Shell"}
+            </strong>
           </span>
           <span className="px-2.5 py-1 rounded border bg-emerald-500/15 text-emerald-400 border-emerald-500/30 font-semibold">
             Memory Integrity: [🔒 SECURE - SHA-256 LEGIT]

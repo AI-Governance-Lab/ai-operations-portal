@@ -117,16 +117,18 @@ ai-operations-portal/
 
 ---
 
-## Enterprise Extensions
+## Enterprise Extensions & Plugin Architecture
 
-This repository provides the **Open-Core Appliance Skeleton**, including the public FastAPI interceptor gateway, native Prometheus AIOps telemetry hooks, agnostic LiteLLM FinOps configuration, and executive UI shell.
+This repository provides the **Open-Core Appliance (`Apache-2.0`)**, including the public FastAPI interceptor gateway, dynamic plugin loader (`backend/src/plugin_loader.py`), native Prometheus AIOps telemetry hooks, agnostic LiteLLM FinOps configuration, and executive React 18 UI shell.
 
-To maintain strict security boundaries and protect proprietary algorithms, the **core processing logic (Universal Scrubbers, real multi-judge engines, and secure ledgers) is managed via private enterprise R&D configs**:
+### How Open-Core & Private Enterprise Plugins Connect
+At startup, `plugin_loader.py` inspects Python `entry_points(group="ai_portal.plugins")` and `/app/plugins` (`AI_PORTAL_PLUGINS_DIR`):
+- **Standalone Public Mode (Default):** Runs out-of-the-box with zero private dependencies using `OpenCorePassthroughScrubber`, `MockAsyncJudgeCouncil`, `EphemeralSHA256Ledger`, and `AbstractAnomalyPredictor` (`GET /api/v1/edition` → `"edition": "open-core"`).
+- **Enterprise Mode (Private Extension Attached):** Automatically hot-swaps in proprietary plugins implementing the abstract base contracts (`GET /api/v1/edition` → `"edition": "enterprise"`) and mounts private FastAPI routers:
+  - **Universal Context-Aware Scrubbers (`BasePrivacyScrubber`)**: High-speed NER/regex-hybrid sanitization engines, domain-specific financial/healthcare redaction ontologies, and reversible HMAC cryptographic token vaults.
+  - **Production Multi-Judge Consensus Engines (`BaseComplianceJudgeCouncil`)**: Calibrated small-language-model (SLM) judge ensembles, deterministic guardrails, and sub-15ms asynchronous policy arbitration.
+  - **Hardware-Backed & Persistent Secure Ledgers (`BaseAuditLedger`)**: Durable hash-chained SQLite/WORM storage sinks, cryptographic block signing, and automated regulatory attestation exporters.
 
-- **Universal Context-Aware Scrubbers (`privacy_scrubber.py`)**: High-speed NER/regex-hybrid sanitization engines, domain-specific financial/healthcare redaction ontologies, and reversible cryptographic token vaults.
-- **Production Multi-Judge Consensus Engines (`compliance_judges.py`)**: Calibrated small-language-model (SLM) judge ensembles, deterministic guardrails, and sub-15ms asynchronous policy arbitration.
-- **Hardware-Backed Secure Ledgers (`audit_ledger.py`)**: HSM-signed Merkle trees, WORM storage sinks, and automated regulatory compliance attestation exporters.
-
-> **Discussions**:  
-> Organizations requiring production access to private enterprise R&D configurations, custom multi-judge compliance rulepacks, or dedicated air-gapped K3s/OpenShift deployment engineering are invited to **contact the author**.
+> **Discussions & Enterprise Access**:  
+> Organizations requiring production access to the private `ai-operations-portal-enterprise` plugin suite, custom multi-judge compliance rulepacks, or dedicated air-gapped K3s/OpenShift deployment engineering are invited to **contact the author**.
 

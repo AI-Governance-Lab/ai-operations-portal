@@ -34,14 +34,14 @@ from .aiops_metrics import (
     export_prometheus_snapshot,
     sample_runtime_saturation,
 )
-from .privacy_scrubber import OpenCorePassthroughScrubber
-from .compliance_judges import MockAsyncJudgeCouncil
-from .audit_ledger import EphemeralSHA256Ledger
+from .plugin_loader import load_governance_bundle
+
+runtime_bundle = load_governance_bundle()
 
 app = FastAPI(
     title="AI Operations Portal",
     description="Self-Hosted Enterprise AI Governance, FinOps, AIOps & Cryptographic Audit Middleware",
-    version="1.0.0-open-core",
+    version=f"1.0.0-{runtime_bundle.edition}",
 )
 
 app.add_middleware(
@@ -52,10 +52,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize Open-Core Governance Shells
-scrubber_engine = OpenCorePassthroughScrubber()
-judge_council = MockAsyncJudgeCouncil()
-audit_ledger = EphemeralSHA256Ledger()
+# Initialize Governance Engines (Open-Core fallback or Private Enterprise plugins)
+scrubber_engine = runtime_bundle.scrubber
+judge_council = runtime_bundle.judge_council
+audit_ledger = runtime_bundle.audit_ledger
+anomaly_predictor = runtime_bundle.anomaly_predictor
+
+for enterprise_router in runtime_bundle.routers:
+    app.include_router(enterprise_router)
 
 
 class ChatMessage(BaseModel):
@@ -76,8 +80,21 @@ async def health_check() -> Dict[str, Any]:
     saturation = sample_runtime_saturation()
     return {
         "status": "healthy",
-        "appliance_mode": "self-hosted-open-core",
+        "edition": runtime_bundle.edition,
+        "appliance_mode": f"self-hosted-{runtime_bundle.edition}",
+        "plugin_source": runtime_bundle.plugin_source,
+        "loaded_plugins": runtime_bundle.loaded_plugins,
         "runtime_saturation": saturation,
+    }
+
+
+@app.get("/api/v1/edition", tags=["AIOps"])
+async def get_appliance_edition() -> Dict[str, Any]:
+    """Returns active Open-Core vs Enterprise plugin capabilities for the UI."""
+    return {
+        "edition": runtime_bundle.edition,
+        "plugin_source": runtime_bundle.plugin_source,
+        "loaded_plugins": runtime_bundle.loaded_plugins,
     }
 
 
@@ -140,6 +157,10 @@ async def intercept_chat_completions(request: ChatCompletionRequest) -> Dict[str
     )
 
     total_elapsed = time.perf_counter() - pipeline_start
+    anomaly_report = anomaly_predictor.evaluate_latency_drift(
+        model_group=request.model,
+        latency_ms=round(total_elapsed * 1000.0, 3),
+    )
 
     # Step 5: Public Prometheus Telemetry Hooks
     PAYLOAD_REQUESTS_TOTAL.labels(
@@ -154,6 +175,7 @@ async def intercept_chat_completions(request: ChatCompletionRequest) -> Dict[str
     return {
         "object": "chat.completion",
         "model": request.model,
+        "edition": runtime_bundle.edition,
         "proxy_mode": proxy_mode,
         "choices": [
             {
@@ -168,9 +190,11 @@ async def intercept_chat_completions(request: ChatCompletionRequest) -> Dict[str
             "total_tokens": prompt_tokens + completion_tokens,
         },
         "governance_envelope": {
+            "edition": runtime_bundle.edition,
             "privacy_scrubber": asdict(scrub_result),
             "compliance_verdict": asdict(verdict),
             "audit_ledger_block": asdict(ledger_block),
+            "anomaly_telemetry": anomaly_report,
         },
     }
 
