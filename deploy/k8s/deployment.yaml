@@ -1,0 +1,112 @@
+# ============================================================================
+# AI Operations Portal — Universal Kubernetes Manifest (Cloud-Agnostic)
+# Runs unmodified on: K3s, GKE, EKS, AKS, Rancher & Red Hat OpenShift
+# Apply: kubectl apply -f deploy/k8s/deployment.yaml
+# ============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-governance
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-operations-portal-config
+  namespace: ai-governance
+data:
+  LITELLM_PROXY_MODE: "auto"
+  LITELLM_PROXY_URL: "http://litellm-gateway.ai-governance.svc.cluster.local:4000/v1"
+  LITELLM_DEFAULT_MODEL: "gemini-3.8-flash"
+  LITELLM_DEFAULT_JUDGES: "gemini-3.8-flash,ministral-14b-latest,nvidia/nemotron-3.5-lightning-30b-a3b"
+  PORT: "8000"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ai-operations-portal-secrets
+  namespace: ai-governance
+type: Opaque
+stringData:
+  PORTAL_MASTER_KEY: "change-me-in-production-k8s-secret"
+  LITELLM_API_KEY: "sk-replace-with-cluster-litellm-key"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-operations-portal
+  namespace: ai-governance
+  labels:
+    app: ai-operations-portal
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ai-operations-portal
+  template:
+    metadata:
+      labels:
+        app: ai-operations-portal
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: portal
+          image: ghcr.io/ai-governance-lab/ai-operations-portal:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: ai-operations-portal-config
+            - secretRef:
+                name: ai-operations-portal-secrets
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: runtime-tmp
+              mountPath: /tmp
+      volumes:
+        - name: runtime-tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-operations-portal
+  namespace: ai-governance
+  labels:
+    app: ai-operations-portal
+spec:
+  type: ClusterIP
+  selector:
+    app: ai-operations-portal
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

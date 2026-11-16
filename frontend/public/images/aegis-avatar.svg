@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <radialGradient id="coreGlow" cx="50%" cy="42%" r="58%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="55%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </radialGradient>
+    <linearGradient id="helmetShell" x1="28" y1="20" x2="100" y2="104" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="65%" stop-color="#e2e8f0" />
+      <stop offset="100%" stop-color="#94a3b8" />
+    </linearGradient>
+    <linearGradient id="crownGold" x1="48" y1="16" x2="80" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+  </defs>
+
+  <!-- Vibrant High-Contrast Outer Medallion -->
+  <circle cx="64" cy="64" r="61" fill="url(#coreGlow)" stroke="#ecfdf5" stroke-width="4" />
+  <circle cx="64" cy="64" r="53" stroke="#ffffff" stroke-opacity="0.45" stroke-width="2" stroke-dasharray="6 5" />
+
+  <!-- Side Neural Antenna Ears (Bright White/Gold) -->
+  <rect x="17" y="50" width="11" height="26" rx="5.5" fill="#ffffff" stroke="#0f172a" stroke-width="2.5" />
+  <rect x="100" y="50" width="11" height="26" rx="5.5" fill="#ffffff" stroke="#0f172a" stroke-width="2.5" />
+  <circle cx="22.5" cy="44" r="4.5" fill="#fef08a" stroke="#0f172a" stroke-width="2" />
+  <circle cx="105.5" cy="44" r="4.5" fill="#fef08a" stroke="#0f172a" stroke-width="2" />
+
+  <!-- Bright Pearl-White Sentinel Shield Helmet -->
+  <path d="M64 18 C88 18 101 34 101 58 C101 83 85 101 64 109 C43 101 27 83 27 58 C27 34 40 18 64 18 Z"
+        fill="url(#helmetShell)" stroke="#0f172a" stroke-width="3.5" stroke-linejoin="round" />
+
+  <!-- Golden Governance Crest on Forehead -->
+  <path d="M64 23 L75 33 L64 41 L53 33 Z" fill="url(#crownGold)" stroke="#0f172a" stroke-width="2.2" stroke-linejoin="round" />
+
+  <!-- Deep Contrast Panoramic Visor -->
+  <rect x="36" y="47" width="56" height="24" rx="12" fill="#020617" stroke="#0f172a" stroke-width="2.5" />
+
+  <!-- Luminous High-Visibility Sentinel Eyes + Friendly Arc -->
+  <circle cx="51" cy="59" r="6" fill="#34d399" />
+  <circle cx="49.5" cy="57" r="2.2" fill="#ffffff" />
+  <circle cx="77" cy="59" r="6" fill="#22d3ee" />
+  <circle cx="75.5" cy="57" r="2.2" fill="#ffffff" />
+  <path d="M58 63 Q64 67 70 63" stroke="#fef08a" stroke-width="2.6" stroke-linecap="round" />
+
+  <!-- Chin Shield Vent -->
+  <path d="M50 84 H78 M55 91 H73" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />
+</svg>

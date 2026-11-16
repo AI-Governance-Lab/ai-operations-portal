@@ -1,0 +1,65 @@
+# ============================================================================
+# AI Operations Portal - Master .gitignore
+# ============================================================================
+
+# Python Virtual Environments & Packaging
+venv/
+.venv/
+env/
+virtualenv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node.js / React 18 / Vite Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment Variables & Sovereign Secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+credentials.json
+
+# Local Runtime Logs, PIDs & Databases
+*.log
+*.pid
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Observability Local Volumes (Prometheus / Grafana)
+prometheus_data/
+grafana_data/
+data/
+tmp/
+temp/
+
+# OS & Editor Metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~

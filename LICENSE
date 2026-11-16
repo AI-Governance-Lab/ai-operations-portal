@@ -1,0 +1,27 @@
+AI Operations Portal — Source-Available Portfolio & Evaluation License
+Copyright (c) 2026 Marian Ropota / AI Governance Lab. All Rights Reserved.
+
+1. Scope & Permitted Evaluation Use
+Permission is hereby granted, free of charge, to any individual or organization
+strictly for the following non-commercial evaluation purposes:
+  (a) Viewing, cloning, and inspecting the source code on GitHub or locally;
+  (b) Running the software locally or in a personal/interview sandbox solely to
+      evaluate the author's software architecture, security, and engineering work.
+
+2. Restrictions (No Commercial Use, Redistribution, or Derivative SaaS)
+Except as expressly permitted in Section 1, you may NOT:
+  (a) Use, deploy, or operate this software (or any substantial portion of it) in
+      production, commercial, or internal business environments;
+  (b) Sell, sublicense, redistribute, rebrand, or offer this software as a
+      hosted service, SaaS, or managed offering;
+  (c) Create or distribute derivative works outside private evaluation testing.
+
+3. Solo-Maintained Portfolio Policy
+This repository is maintained exclusively by the author as a technical portfolio
+and architectural showcase. External pull requests and contributions are not
+accepted.
+
+4. No Warranty
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
